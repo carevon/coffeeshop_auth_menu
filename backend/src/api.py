@@ -1,5 +1,6 @@
 import os
-from flask import Flask, request, jsonify, abort
+import logging
+from flask import Flask, request, jsonify, abort, Response
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
@@ -31,8 +32,14 @@ CORS(app)
 @app.route('/drinks')
 @requires_auth('get:drinks')
 def drinks(jwt):
-    print(f'Received JWT in the first endpoint hit: {jwt}')
-    return 'not implemented'
+    logging.info('Start of get drinks endpoint;')
+    print('Start of get drinks execution.')
+    result = Drink.query.all()
+    print(f'Results: {result}')
+    if len(result) == 0:
+        abort(Response('Drinks resource were not found', 404))
+    drinks = [drink.short() for drink in result]
+    return jsonify({'success': True, 'drinks': drinks})
 
 
 '''
@@ -43,6 +50,14 @@ def drinks(jwt):
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
+def drinks_detail(jwt):
+    result = Drink.query.order_by(Drink.id).all()
+    if len(result) == 0:
+        abort(Response('Drinks resource were not found', 404))
+    drink_details = [drink.long() for drink in result]
+    return jsonify({'success': True, 'drinks': drink_details})
 
 
 '''
@@ -54,6 +69,34 @@ def drinks(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def create_drinks(jwt):
+    print('Start of post drinks execution.')
+    # body = request.get_json()
+    # print(json.dumps(body))
+    new_title = request.json.get('title', None)
+    new_recipe = request.json.get('recipe', None)
+    search = request.json.get('search', None)
+    try:
+        if search:
+            pass
+        else:
+            print(f'JSON DUMPS: {json.dumps(new_recipe)}')
+            print(f'Normal new_recipe: {new_recipe}')
+            drink = Drink(title=new_title, recipe=str(json.dumps(new_recipe)))
+            drink.insert()
+            print('insert done')
+            result = Drink.query.filter(Drink.id == drink.id).one_or_none()
+            print(f'Result: {result}')
+            if len(result) == 0:
+                abort(Response('Drinks resource were not found', 404))
+            else:
+                print('success')
+                drinks = [drink.long() for drink in result]
+            return jsonify({'success': True, 'drinks': drinks})
+    except Exception as e:
+        abort(Response(f'An unexpected error has occurred while posting drink {e}', 422))
 
 
 '''

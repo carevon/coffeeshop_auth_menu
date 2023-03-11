@@ -33,7 +33,6 @@ class AuthError(Exception):
 def get_token_auth_header():
    """ Obtains the Access Token from the Authorization Header"""
    try:
-        print('Hitting get token method')
         auth = request.headers.get('Authorization', None)
         if not auth:
             raise AuthError(
@@ -93,10 +92,8 @@ def check_permissions(permission, payload):
                 'code': 'unauthorized',
                 'description': 'Permission not found.'
                 }, 403)
-        print('User has permission')
         return True
     except AuthError as auth_error:
-        print('User does not have a permission')
         if auth_error.status_code == 403:
             abort(403, auth_error)
         else:
@@ -180,15 +177,14 @@ def verify_decode_jwt(token):
     return the decorator which passes the decoded payload to the decorated method
 '''
 def requires_auth(permission=''):
-    print('Hitting requires_auth method')
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            print(f'JWT Token: {token}')
+            # print(f'JWT Token: {token}')
             try:
                 payload = verify_decode_jwt(token)
-                print(f'Decoded payload: {payload}')
+                # print(f'Decoded payload: {payload}')
             # except AuthError as auth_error:
             #     if auth_error.status_code == 401:
             #         not_authorized_route(auth_error.error)
