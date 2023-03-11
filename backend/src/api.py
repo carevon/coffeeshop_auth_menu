@@ -18,7 +18,7 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this function will add one
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 # ROUTES
 '''
@@ -54,6 +54,7 @@ def drinks(jwt):
 @requires_auth('get:drinks-detail')
 def drinks_detail(jwt):
     result = Drink.query.order_by(Drink.id).all()
+    
     if len(result) == 0:
         abort(Response('Drinks resource were not found', 404))
     drink_details = [drink.long() for drink in result]
@@ -82,18 +83,15 @@ def create_drinks(jwt):
         if search:
             pass
         else:
-            print(f'JSON DUMPS: {json.dumps(new_recipe)}')
-            print(f'Normal new_recipe: {new_recipe}')
-            drink = Drink(title=new_title, recipe=str(json.dumps(new_recipe)))
+            drink = Drink(title=new_title, recipe=json.dumps([new_recipe]))
             drink.insert()
-            print('insert done')
             result = Drink.query.filter(Drink.id == drink.id).one_or_none()
+            # test = Drink.query.filter(Drink.id == drink.id).all()
             print(f'Result: {result}')
-            if len(result) == 0:
+            if result is None:
                 abort(Response('Drinks resource were not found', 404))
             else:
-                print('success')
-                drinks = [drink.long() for drink in result]
+                drinks = [drink.long()]
             return jsonify({'success': True, 'drinks': drinks})
     except Exception as e:
         abort(Response(f'An unexpected error has occurred while posting drink {e}', 422))
@@ -110,6 +108,10 @@ def create_drinks(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<:id>')
+@requires_auth('patch:drinks')
+def update_drinks(jwt):
+    print('Start of patch drink execution')
 
 
 '''

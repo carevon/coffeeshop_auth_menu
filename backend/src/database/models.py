@@ -95,6 +95,7 @@ class Drink(db.Model):
     '''
 
     def insert(self):
+        print(f'Object Insert method received: {self}')
         db.session.add(self)
         db.session.commit()
 
