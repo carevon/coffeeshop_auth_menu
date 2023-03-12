@@ -138,7 +138,19 @@ def update_drinks(jwt, id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drinks(jwt, id):
+    print('Start of delete drink execution.')
+    try:
+        drink = Drink.query.filter(Drink.id == id).first()
+        if drink is None:
+            abort(Response('Drink resource could not been found'), 404)
+        else:
+            drink.delete()
+            return jsonify({"success": True, "delete": id})
+    except Exception as delete_error:
+        abort(Response(f'An unexpected error has occurred while deleting drink: {delete_error}', 422))
 
 # Error Handling
 '''
