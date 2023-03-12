@@ -89,10 +89,10 @@ def create_drinks(jwt):
             # test = Drink.query.filter(Drink.id == drink.id).all()
             print(f'Result: {result}')
             if result is None:
-                abort(Response('Drinks resource were not found', 404))
+                abort(Response('Drink resource were not found', 404))
             else:
                 drinks = [drink.long()]
-            return jsonify({'success': True, 'drinks': drinks})
+            return jsonify({'success': True, 'drinks': drinks}, 200)
     except Exception as e:
         abort(Response(f'An unexpected error has occurred while posting drink {e}', 422))
 
@@ -108,10 +108,24 @@ def create_drinks(jwt):
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<:id>')
+@app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def update_drinks(jwt):
-    print('Start of patch drink execution')
+def update_drinks(jwt, id):
+    request_bar = request.get_json()
+    try:
+        print('Start of patch drink execution')
+        drink = Drink.query.filter(Drink.id == id).first()
+        if drink is None:
+            abort(Response('Drink resource could not been found', 404))
+        else:
+            print(request_bar.get('title', None))
+            drink.title = request_bar.get('title', None)
+            print(f'Updated drink: {drink}')
+            drink.update()
+            drink = [drink.long()]
+            return jsonify({'success': True, 'drinks': drink}, 200)
+    except Exception as e:
+        abort(Response(f'An unexpected error has occurred while patching drink {e}', 422))
 
 
 '''
