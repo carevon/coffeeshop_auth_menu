@@ -34,11 +34,12 @@ db_drop_and_create_all()
 def drinks(jwt):
     logging.info('Start of get drinks endpoint;')
     print('Start of get drinks execution.')
-    result = Drink.query.all()
+    result = Drink.query.order_by(Drink.id).all()
     print(f'Results: {result}')
     if len(result) == 0:
         abort(Response('Drinks resource were not found', 404))
     drinks = [drink.short() for drink in result]
+    print(drinks)
     return jsonify({'success': True, 'drinks': drinks})
 
 
@@ -83,7 +84,7 @@ def create_drinks(jwt):
         if search:
             pass
         else:
-            drink = Drink(title=new_title, recipe=json.dumps([new_recipe]))
+            drink = Drink(title=new_title, recipe=json.dumps(new_recipe))
             drink.insert()
             result = Drink.query.filter(Drink.id == drink.id).one_or_none()
             # test = Drink.query.filter(Drink.id == drink.id).all()
@@ -122,8 +123,9 @@ def update_drinks(jwt, id):
             drink.title = request_bar.get('title', None)
             print(f'Updated drink: {drink}')
             drink.update()
-            drink = [drink.long()]
-            return jsonify({'success': True, 'drinks': drink}, 200)
+            result = drink.long()
+            print(result)
+            return jsonify({'success': True, 'drinks': [result]})
     except Exception as e:
         abort(Response(f'An unexpected error has occurred while patching drink {e}', 422))
 
